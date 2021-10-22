@@ -108,7 +108,11 @@ function opponent(id: string, p: player) :: player:
 function generateID() :: string:
   return random uuid
 
+on player arm swing:
+  cancel event
+  target player is set
+  distance between player and target player is smaller than 5
+  startMatch(player, target player)
 
 on damage of player:
   cancel event
-  startMatch(attacker, victim)
