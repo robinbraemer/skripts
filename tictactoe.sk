@@ -8,18 +8,13 @@ options:
 function startMatch(p1: player, p2: player) :: string:
   # Create new match id
   set {_id} to generateID()
-
   # Save players of this match
-  set {match::%{_id}%::player::1} to {_p1}
-  set {match::%{_id}%::player::2} to {_p2}
-
+  add {_p1}, {_p2} to {match::%{_id}%::player::*}
   # Whos turn is it
   set {match::%{_id}%::turn} to {_p1}
-
   # Must initialize empty fields
   loop 9 times:
     set {match::%{_id}%::field::%loop-number%} to ""
-
   # Create gui of this match
   create gui with virtual chest inventory with 5 rows named {@title} and shape "xxxxxxxxx", "xax123xbx", "xcx456xdx", "xxx789xxx", "xxxxxxxxx":
     # Side bar items
@@ -45,11 +40,9 @@ function startMatch(p1: player, p2: player) :: string:
         else:
           # It's not player's turn
           play sound "block.wooden_button.click_off" at pitch 10 to gui player
-
   # Open match to opponents
-  open last gui to {_p1}
-  open last gui to {_p2}
-
+  open last gui to {match::%{_id}%::player::*}
+  # Return match id
   return {_id}
 
 # checkGameEnd checks whether the game is over
