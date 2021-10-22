@@ -1,0 +1,121 @@
+options:
+  title: "&eTicTacToe - Match"
+  empty: "&r"
+  p1: blue wool named "&bBlue"
+  p2: red wool named "&cRed"
+
+# startMatch starts a new match and between two players and returns its match id.
+function startMatch(p1: player, p2: player) :: string:
+  # Create new match id
+  set {_id} to generateID()
+
+  # Save players of this match
+  set {match::%{_id}%::player::1} to {_p1}
+  set {match::%{_id}%::player::2} to {_p2}
+
+  # Whos turn is it
+  set {match::%{_id}%::turn} to {_p1}
+
+  # Must initialize empty fields
+  loop 9 times:
+    set {match::%{_id}%::field::%loop-number%} to ""
+
+  # Create gui of this match
+  create gui with virtual chest inventory with 5 rows named {@title} and shape "xxxxxxxxx", "xax123xbx", "xcx456xdx", "xxx789xxx", "xxxxxxxxx":
+    # Side bar items
+    make gui slot "x" with gray stained glass pane named {@empty}
+    make gui slot "a" with head of {_p1} named "&b%{_p1}%"
+    make gui slot "b" with head of {_p2} named "&c%{_p2}%"
+    make gui slot "c" with playerItem({_id}, {_p1})
+    make gui slot "d" with playerItem({_id}, {_p2})
+    # Board fields
+    loop 9 times:
+      set {_i} to loop-number
+      make gui slot "%{_i}%" with white stained glass pane named {@empty}:
+        # Check if it is player's turn
+        if {match::%{_id}%::turn} is gui player:
+          # Set player for selected field
+          set {match::%{_id}%::field::%{_i}%} to gui player
+          make gui slot "%{_i}%" with playerItem({_id}, gui player)
+          play sound "block.wool.place" to gui player
+          # Check if game is won/over
+          checkMatchEnd({_id}, gui player) is false
+          # Now it's opponent's turn
+          set {match::%{_id}%::turn} to opponent({_id}, gui player)
+        else:
+          # It's not player's turn
+          play sound "block.wooden_button.click_off" at pitch 10 to gui player
+
+  # Open match to opponents
+  open last gui to {_p1}
+  open last gui to {_p2}
+
+  return {_id}
+
+# checkGameEnd checks whether the game is over
+# - no more fields left
+# - or 3 in a row and player has won
+# returns true if match has ended
+function checkMatchEnd(id: string, p: player) :: boolean:
+  set {_f::*} to {match::%{_id}%::field::*}
+  set {_won} to false
+
+  # Check has won
+  if {_f::1} is {_p}:
+    if {_f::2} is {_p}:
+      if {_f::3} is {_p}:
+        set {_won} to true
+    else if {_f::4} is {_p}:
+      {_f::7} is {_p}
+      set {_won} to true
+    else if {_f::5} is {_p}:
+      {_f::9} is {_p}
+      set {_won} to true
+  else if {_f::9} is {_p}:
+    if {_f::8} is {_p}:
+      {_f::7} is {_p}
+      set {_won} to true
+    if {_f::6} is {_p}:
+      {_f::3} is {_p}
+      set {_won} to true
+  else if {_f::3} is {_p}:
+    {_f::5} is {_p}
+    {_f::7} is {_p}
+    set {_won} to true
+
+  if {_won} is false:
+    # No winner found
+    # Check board is full
+    loop {_f::*}:
+      loop-value is ""
+      return false
+
+  close inventory of {match::%{_id}%::player::*}
+
+  if {_won} is true:
+    send "%{_p}% has won!" to {match::%{_id}%::player::*}
+  else:
+    # Board is full, no winner, gameover
+    send "Gameover, it's a draw!" to {match::%{_id}%::player::*}
+
+  return true
+
+# playerItem returns the player's team item
+function playerItem(id: string, p: player) :: item type:
+  if {_p} is {match::%{_id}%::player::1}:
+    return {@p1}
+  return {@p2}
+
+# opponent returns the player's match opponent
+function opponent(id: string, p: player) :: player:
+  if {_p} is {match::%{_id}%::player::1}:
+    return {match::%{_id}%::player::2}
+  return {match::%{_id}%::player::1}
+
+function generateID() :: string:
+  return random uuid
+
+
+on damage of player:
+  cancel event
+  startMatch(attacker, victim)
