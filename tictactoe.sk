@@ -71,6 +71,14 @@ function checkMatchEnd(id: string, p: player) :: boolean:
     if {_f::6} is {_p}:
       {_f::3} is {_p}
       set {_won} to true
+  else if {_f::4} is {_p}:
+    {_f::5} is {_p}
+    {_f::6} is {_p}
+    set {_won} to true
+  else if {_f::2} is {_p}:
+    {_f::5} is {_p}
+    {_f::8} is {_p}
+    set {_won} to true
   else if {_f::3} is {_p}:
     {_f::5} is {_p}
     {_f::7} is {_p}
